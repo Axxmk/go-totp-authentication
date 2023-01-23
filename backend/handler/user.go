@@ -3,6 +3,8 @@ package handler
 import (
 	"encoding/json"
 	service "github.com/axxmk/go-totp-authentication/serivce"
+	"github.com/axxmk/go-totp-authentication/types"
+	"github.com/axxmk/go-totp-authentication/utils"
 	"net/http"
 )
 
@@ -15,17 +17,34 @@ func NewUserHandler(userService service.UserService) userHandler { // Adapter of
 }
 
 func (h userHandler) SignUp(w http.ResponseWriter, r *http.Request) {
-	email, password, err := h.service.SignUp("", "")
-	if err != nil {
+	// Check if the request method is POST
+	if r.Method != "POST" {
+		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 
-	response, err := json.Marshal(map[string]any{
-		"email":    email,
-		"password": password,
-	})
+	// Set the response header to application/json
+	w.Header().Set("Content-Type", "application/json")
+	var response []byte
+	var body types.SignUp
+	err := utils.Parse(r, &body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
+	// Call signup service
+	token, base64, err := h.service.SignUp(body.Email, body.Password)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Create a response
+	response, _ = json.Marshal(map[string]any{"success": true, "token": token, "image": base64})
 	w.Write(response)
+
+	return
 }
 
 func (h userHandler) SignIn(w http.ResponseWriter, r *http.Request) {

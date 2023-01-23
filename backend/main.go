@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"github.com/axxmk/go-totp-authentication/config"
 	"github.com/axxmk/go-totp-authentication/handler"
 	"github.com/axxmk/go-totp-authentication/repository"
 	"github.com/axxmk/go-totp-authentication/serivce"
@@ -18,7 +19,7 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	db, err := sql.Open("mysql", "{your_sql_connection_string}")
+	db, err := sql.Open("mysql", config.C.DB_HOST)
 	if err != nil {
 		panic(err)
 	}
